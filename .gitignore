@@ -1,0 +1,10 @@
+.DS_Store/
+*.swp
+*~
+node_modules/
+dist/
+example/build
+*.d.ts
+*.js
+*.js.map
+.idea/
