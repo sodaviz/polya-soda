@@ -1,4 +1,4 @@
-import * as ps from "@traviswheelerlab/polya-soda";
+import * as ps from "@sodaviz/polya-soda";
 
 let container = new ps.PolyaContainer({selector: "#charts"});
 

@@ -1,5 +1,5 @@
 import * as soda from "@sodaviz/soda";
-import * as rs from "@traviswheelerlab/rmsk-soda";
+import * as rs from "@sodaviz/rmsk-soda";
 import { PolyaOutput } from "./polya-output";
 
 let colors = ["#17becf", "#ff7f0e", "#2ca02c", "#d62728"];

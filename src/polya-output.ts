@@ -1,4 +1,4 @@
-import * as rs from "@traviswheelerlab/rmsk-soda";
+import * as rs from "@sodaviz/rmsk-soda";
 
 interface ConfidenceRecord {
   start: number;
