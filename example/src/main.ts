@@ -1,15 +1,25 @@
-import * as ps from "@traviswheelerlab/polya-soda";
+import * as ps from "@sodaviz/polya-soda";
+import {Spinner} from "spin.js";
 
 let container = new ps.PolyaContainer({selector: "#charts"});
+let spinner = new Spinner({
+  color: "cadetblue",
+  position: "relative",
+  top: "100px"
+});
 
 function submitFile(): void {
   let input = <HTMLInputElement>document.getElementById("file-input")!;
   let file = input.files![0];
+  spinner.spin(document.querySelector<HTMLDivElement>("#charts")!);
   file.text().then((data: string) => submitData(data));
 }
 
 function submitExample(): void {
-  fetch(`https://sodaviz.org/polya/2`)
+  let input = <HTMLInputElement>document.getElementById("example-selection")!;
+  let example = input.value;
+  spinner.spin(document.querySelector<HTMLDivElement>("#charts")!);
+  fetch(`https://sodaviz.org/polya/${example}`)
     .then((response) => response.text())
     .then((data: string) => submitData(data));
 }
@@ -21,6 +31,7 @@ function submitData(data: string): void {
   } else {
     container.render(obj);
   }
+  spinner.stop();
 }
 
 function updateFileLabel(this: HTMLInputElement): void {
@@ -46,7 +57,7 @@ document.getElementById('file-input')!
   .addEventListener("change", updateFileLabel)
 document.getElementById("submit-file")!
   .addEventListener("click", submitFile);
-document.getElementById("example")!
+document.getElementById("submit-example")!
   .addEventListener("click", submitExample);
 document
   .getElementById("toggle-confidence")!

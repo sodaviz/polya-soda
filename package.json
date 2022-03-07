@@ -1,7 +1,7 @@
 {
-  "name": "@traviswheelerlab/polya-soda",
-  "version": "1.0.1",
-  "description": ">A [SODA](https://sodaviz.org/) visualization built as a debugging tool [PolyA](https://github.com/traviswheelerlab/polya).",
+  "name": "@sodaviz/polya-soda",
+  "version": "1.0.0",
+  "description": ">A [SODA](https://sodaviz.org/) visualization built as a debugging tool [PolyA](https://github.com/sodaviz/polya).",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
   "files": [
@@ -11,10 +11,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jack Roddy",
-  "license": "Apache-2.0",
+  "license": "BSD-3-Clause",
   "dependencies": {
-    "@sodaviz/soda": "^0.8.0",
-    "@traviswheelerlab/rmsk-soda": "^1.1.0",
+    "@sodaviz/soda": "^0.9.1",
+    "@sodaviz/rmsk-soda": "^1.0.0",
     "d3": "5.15.0"
   },
   "devDependencies": {
@@ -27,7 +27,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TravisWheelerLab/polya-soda.git"
+    "url": "git+https://github.com/sodaviz/polya-soda.git"
   },
   "keywords": [
     "bioinformatics",
@@ -35,7 +35,7 @@
     "visualization"
   ],
   "bugs": {
-    "url": "https://github.com/TravisWheelerLab/polya-soda/issues"
+    "url": "https://github.com/sodaviz/polya-soda/issues"
   },
-  "homepage": "https://github.com/TravisWheelerLab/polya-soda#readme"
+  "homepage": "https://github.com/sodaviz/polya-soda#readme"
 }

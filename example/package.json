@@ -2,18 +2,16 @@
   "name": "polya-soda-example",
   "version": "1.0.0",
   "description": "Example usage of polya-soda.",
-  "main": "bootstrap.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jack Roddy",
   "license": "ISC",
   "dependencies": {
-    "@traviswheelerlab/polya-soda": "file:..",
-    "source-map-loader": "1.0.0"
-  },
-  "devDependencies": {
+    "@sodaviz/polya-soda": "file:..",
     "esbuild": "^0.14.24",
+    "source-map-loader": "1.0.0",
+    "spin.js": "^4.1.1",
     "typescript": "4.1.3"
   }
 }

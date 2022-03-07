@@ -1,6 +1,6 @@
 import * as soda from "@sodaviz/soda";
-import * as rs from "@traviswheelerlab/rmsk-soda";
-import { PolyaOutput } from "./polya-output";
+import * as rs from "@sodaviz/rmsk-soda";
+import {PolyaOutput} from "./polya-output";
 
 let colors = ["#17becf", "#ff7f0e", "#2ca02c", "#d62728"];
 
@@ -54,7 +54,6 @@ export class PolyaContainer {
     const container = this;
     this.polyaChart = new rs.RmskChart({
       ...chartConf,
-      zoomable: true,
       lowerPadSize: 20,
       postResize(): void {
         container.initializeBrush();
@@ -156,6 +155,11 @@ export class PolyaContainer {
         });
       },
     });
+    
+    let confWidth = parseInt(this.confidenceChart.viewportSelection.attr("width"));
+    let otherWidth = this.genomeChart.getContainerWidth();
+    this.polyaSelectionChart.rightPadSize = otherWidth - confWidth;
+    this.genomeChart.rightPadSize = otherWidth - confWidth;
 
     this.charts = [
       this.ucscChart,
