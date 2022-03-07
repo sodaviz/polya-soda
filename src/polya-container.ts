@@ -1,6 +1,6 @@
 import * as soda from "@sodaviz/soda";
 import * as rs from "@sodaviz/rmsk-soda";
-import { PolyaOutput } from "./polya-output";
+import {PolyaOutput} from "./polya-output";
 
 let colors = ["#17becf", "#ff7f0e", "#2ca02c", "#d62728"];
 
@@ -155,7 +155,11 @@ export class PolyaContainer {
         });
       },
     });
-
+    
+    let confWidth = parseInt(this.confidenceChart.viewportSelection.attr("width"));
+    let genomeWidth = this.genomeChart.getContainerWidth();
+    this.genomeChart.rightPadSize = genomeWidth - confWidth; 
+    
     this.charts = [
       this.ucscChart,
       this.polyaChart,
