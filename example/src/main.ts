@@ -9,7 +9,9 @@ function submitFile(): void {
 }
 
 function submitExample(): void {
-  fetch(`https://sodaviz.org/polya/2`)
+  let input = <HTMLInputElement>document.getElementById("example-selection")!;
+  let example = input.value;
+  fetch(`https://sodaviz.org/polya/${example}`)
     .then((response) => response.text())
     .then((data: string) => submitData(data));
 }
@@ -46,7 +48,7 @@ document.getElementById('file-input')!
   .addEventListener("change", updateFileLabel)
 document.getElementById("submit-file")!
   .addEventListener("click", submitFile);
-document.getElementById("example")!
+document.getElementById("submit-example")!
   .addEventListener("click", submitExample);
 document
   .getElementById("toggle-confidence")!

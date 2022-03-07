@@ -16,11 +16,11 @@ button.collapsible info
   p
     | Under the hood, PolyA uses a collection of overlapping sequence alignments between distinct features and a genome to compute position specific confidence scores for each feature.
     | Simply put, the confidence scores are a measure of how confident we are that a position on the genome should be annotated with a given feature.
-    | br
+  p
     | The input to PolyA-SODA is a JSON string that is optionally output by PolyA.
-    | You can download an example JSON
-    a(href="https://sodaviz.org/polya/0") here 
-    | , or press the example button to render it directly.
+    | You can download an example JSON 
+    a(href="https://sodaviz.org/polya/1") here
+    | , or press the example button to render one in the application.
     | br
     | Once a JSON has been submitted, two soda charts displaying TE annotations for the same region in the human genome (hg38) will render. The top chart displays the TE annotations from the UCSC Genome Browser, and the bottom chart displays PolyA annotations.
     | By clicking and dragging on the bottom chart, you can make a brush selection of a region, which render a heatmap of relevant annotation confidence scores and the sequence alignments they are calculated from.
@@ -31,11 +31,15 @@ block content
     label(for="file-input").button
       svg(xmlns="http://www.w3.org/2000/svg" width="20" height="17" viewBox="0 0 20 17", style='stroke: white; fill: white;')
         path(d="M10 0l-5.2 4.9h3.3v5.1h3.8v-5.1h3.3l-5.2-4.9zm9.3 11.5l-3.2-2.1h-2l3.4 2.6h-3.5c-.1 0-.2.1-.2.1l-.8 2.3h-6l-.8-2.2c-.1-.1-.1-.2-.2-.2h-3.6l3.4-2.6h-2l-3.2 2.1c-.4.3-.7 1-.6 1.5l.6 3.1c.1.5.7.9 1.2.9h16.3c.6 0 1.1-.4 1.3-.9l.6-3.1c.1-.5-.2-1.2-.7-1.5z")
-        span#file-label Select a file
-    button#submit-file.button.button1 Submit
-    button#example.button.button2 Example
+        span#file-label  select a file
+    button#submit-file.button.button1 submit file
+    select#example-selection.drop-input-text
+      - let list = [1, 2, 3, 4]
+      each item in list
+        option(value=item)= "example " + item
+    button#submit-example.button.button2 submit example
   #charts
   .controls
-    button#toggle-confidence.button Toggle confidence
-    button#toggle-alignments.button Toggle alignments
+    button#toggle-confidence.button toggle confidence
+    button#toggle-alignments.button toggle alignments
 script(src="main.js")
