@@ -54,7 +54,6 @@ export class PolyaContainer {
     const container = this;
     this.polyaChart = new rs.RmskChart({
       ...chartConf,
-      zoomable: true,
       lowerPadSize: 20,
       postResize(): void {
         container.initializeBrush();
