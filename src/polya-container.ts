@@ -157,9 +157,10 @@ export class PolyaContainer {
     });
     
     let confWidth = parseInt(this.confidenceChart.viewportSelection.attr("width"));
-    let genomeWidth = this.genomeChart.getContainerWidth();
-    this.genomeChart.rightPadSize = genomeWidth - confWidth; 
-    
+    let otherWidth = this.genomeChart.getContainerWidth();
+    this.polyaSelectionChart.rightPadSize = otherWidth - confWidth;
+    this.genomeChart.rightPadSize = otherWidth - confWidth;
+
     this.charts = [
       this.ucscChart,
       this.polyaChart,
