@@ -13,8 +13,8 @@
   "author": "Jack Roddy",
   "license": "BSD-3-Clause",
   "dependencies": {
-    "@sodaviz/soda": "^0.9.1",
-    "@sodaviz/rmsk-soda": "^1.0.0",
+    "@sodaviz/rmsk-soda": "../rmsk-soda/",
+    "@sodaviz/soda": "../soda/",
     "d3": "5.15.0"
   },
   "devDependencies": {
