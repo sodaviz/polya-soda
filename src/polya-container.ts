@@ -302,7 +302,7 @@ export class PolyaContainer {
     this.confidenceVisible = !this.confidenceVisible;
     let value = this.confidenceVisible ? "visible" : "hidden";
     this.confidenceChart.viewportSelection
-      .selectAll("g.confidence")
+      .selectAll("g.confidence-group")
       .style("visibility", value);
   }
 
@@ -310,7 +310,7 @@ export class PolyaContainer {
     this.alignmentsVisible = !this.alignmentsVisible;
     let value = this.alignmentsVisible ? "visible" : "hidden";
     this.confidenceChart.viewportSelection
-      .selectAll("g.alignments, g.insertions")
+      .selectAll("g.alignments-group, g.insertions-group")
       .style("visibility", value);
   }
 
