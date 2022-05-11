@@ -19,7 +19,7 @@ function submitExample(): void {
   let input = <HTMLInputElement>document.getElementById("example-selection")!;
   let example = input.value;
   spinner.spin(document.querySelector<HTMLDivElement>("#charts")!);
-  fetch(`https://sodaviz.org/polya/${example}`)
+  fetch(`https://sodaviz.org/data/polya/${example}`)
     .then((response) => response.text())
     .then((data: string) => submitData(data));
 }

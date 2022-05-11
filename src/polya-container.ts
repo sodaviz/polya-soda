@@ -9,9 +9,9 @@ export interface PolyaContainerConfig {
 }
 
 export interface ConfidenceRenderParams extends soda.RenderParams {
-  annotations: soda.AnnotationGroup<
-    soda.ContinuousAnnotation | soda.SequenceAnnotation
-  >[];
+  labels: soda.Annotation[];
+  confidence: soda.PlotAnnotation[];
+  alignments: soda.SequenceAnnotation[];
 }
 
 export interface GenomeRenderParams extends soda.RenderParams {
@@ -27,10 +27,9 @@ export class PolyaContainer {
   polyaSelectionChart: rs.RmskChart;
   genomeChart: soda.Chart<GenomeRenderParams>;
   confidenceChart: soda.Chart<ConfidenceRenderParams>;
-  annotationCache: rs.RmskAnnotation[] = [];
-  confidenceCache: soda.AnnotationGroup<
-    soda.ContinuousAnnotation | soda.SequenceAnnotation
-  >[] = [];
+  annotationCache: rs.RmskAnnotationGroup[] = [];
+  confidenceCache: soda.AnnotationGroup<soda.PlotAnnotation>[] = [];
+  alignmentCache: soda.AnnotationGroup<soda.SequenceAnnotation>[] = [];
   chromosome: string | undefined;
   semanticBrushRange: [number, number] | undefined;
   confidenceVisible = true;
@@ -47,8 +46,7 @@ export class PolyaContainer {
 
     this.ucscChart = new rs.RmskChart({
       ...chartConf,
-      axisType: soda.AxisType.Bottom,
-      upperPadSize: 20,
+      upperPadSize: 25,
     });
 
     const container = this;
@@ -62,18 +60,17 @@ export class PolyaContainer {
 
     this.polyaSelectionChart = new rs.RmskChart({
       ...chartConf,
-      axisType: soda.AxisType.Bottom,
-      upperPadSize: 20,
+      upperPadSize: 25,
     });
 
     this.genomeChart = new soda.Chart({
       ...chartConf,
-      inRender(params): void {
+      draw(params): void {
         soda.sequence({
           chart: this,
           selector: "genome",
           annotations: params.annotations,
-          y: (d) => d.c.rowHeight * (d.a.y + 1) - 3,
+          y: (d) => d.c.rowHeight * (d.c.layout.row(d) + 1) - 3,
         });
       },
     });
@@ -83,58 +80,44 @@ export class PolyaContainer {
       rowHeight: 30,
       divHeight: 200,
       divOverflowY: "scroll",
-      inRender(params) {
-        let alignments: soda.SequenceAnnotation[] = [];
-        let insertions: soda.SequenceAnnotation[] = [];
-        let confidence: soda.ContinuousAnnotation[] = [];
-        for (const group of params.annotations.map((g) => g.group)) {
-          for (const ann of group) {
-            if ((<soda.ContinuousAnnotation>ann).points != undefined) {
-              confidence.push(<soda.ContinuousAnnotation>ann);
-            } else {
-              if (ann.tag != "inserts") {
-                alignments.push(<soda.SequenceAnnotation>ann);
-              } else {
-                insertions.push(<soda.SequenceAnnotation>ann);
-              }
-            }
-          }
-        }
-
+      draw(params) {
         soda.heatmap({
+          annotations: params.confidence,
           chart: this,
           colorScheme: soda.internalD3.interpolateGreys,
           fillOpacity: 0.8,
           outlineColor: "black",
           selector: "confidence",
-          annotations: confidence,
         });
+
+        soda.simpleText({
+          chart: this,
+          selector: "labels",
+          annotations: params.labels,
+          y: (d) => d.c.rowHeight * d.c.layout.row(d) + 4,
+          fillColor: colors[0],
+          text: (d) => labelMap.get(d.a.id)!,
+        });
+
+        let alignments = params.alignments.filter((ann) => !ann.id.includes("insert"))
+        let insertions = params.alignments.filter((ann) => ann.id.includes("insert"))
 
         soda.sequence({
           chart: this,
           selector: "alignments",
           annotations: alignments,
-          y: (d) => d.c.rowHeight * (d.a.y + 1) - 3,
-          fillColor: (d) => (d.a.tag == "matches" ? colors[2] : colors[1]),
+          y: (d) => d.c.rowHeight * (d.c.layout.row(d) + 1) - 3,
+          fillColor: (d) => (d.a.id.includes("matches") ? colors[2] : colors[1]),
         });
 
-        soda.text({
-          chart: this,
-          selector: "labels",
-          annotations: params.annotations,
-          y: (d) => d.c.rowHeight * d.a.y + 4,
-          fillColor: colors[0],
-          textFn: (a) => [labelMap.get(a.id)!],
-        });
-
-        soda.text({
+        soda.simpleText({
           chart: this,
           selector: "insertions",
           annotations: insertions,
-          y: (d) => d.c.rowHeight * d.a.y + 4,
+          y: (d) => d.c.rowHeight * d.c.layout.row(d) + 4,
           fillColor: colors[3],
           textAnchor: "middle",
-          textFn: () => ["\u25bc"],
+          text: "\u25bc",
         });
 
         soda.hoverBehavior({
@@ -155,9 +138,9 @@ export class PolyaContainer {
         });
       },
     });
-    
+
     let confWidth = parseInt(this.confidenceChart.viewportSelection.attr("width"));
-    let otherWidth = this.genomeChart.getContainerWidth();
+    let otherWidth = this.genomeChart.calculateContainerWidth();
     this.polyaSelectionChart.rightPadSize = otherWidth - confWidth;
     this.genomeChart.rightPadSize = otherWidth - confWidth;
 
@@ -173,6 +156,7 @@ export class PolyaContainer {
   public clear(): void {
     this.annotationCache = [];
     this.confidenceCache = [];
+    this.alignmentCache = [];
     for (const chart of this.charts) {
       chart.clear();
     }
@@ -187,56 +171,47 @@ export class PolyaContainer {
       end: obj.end,
     });
 
-    this.annotationCache = this.polyaChart.buildAnnotations(obj.annotations);
-    let rowCount = Math.max(...this.annotationCache.map((a) => a.row)) + 2;
-
-    this.polyaChart.render({ rowCount });
-
+    this.annotationCache = obj.annotations.map((r) => rs.RmskBedParse(r))
     this.initializeBrush();
 
     this.polyaChart.render({
       annotations: this.annotationCache,
       start: obj.start,
       end: obj.end,
-      rowCount,
     });
 
     for (const [row, rec] of obj.heatmap.entries()) {
       let rowId = `row-${row}`;
-      labelMap.set(rowId, rec.name);
-      let group = new soda.AnnotationGroup<
-        soda.ContinuousAnnotation | soda.SequenceAnnotation
-      >({
-        id: rowId,
-        row: row,
-      });
+      labelMap.set(`${rowId}-conf`, rec.name);
 
+      let confGroup = new soda.AnnotationGroup<soda.PlotAnnotation>({id: `${rowId}-conf`})
+      let aliGroup = new soda.AnnotationGroup<soda.SequenceAnnotation>({id: `${rowId}-ali`})
       for (let i = 0; i < rec.confidence.length; i++) {
         let conf = rec.confidence[i];
-        group.add(
-          new soda.ContinuousAnnotation({
-            id: `${rowId}-conf-${i}`,
-            tag: "confidence",
-            start: conf.start,
-            end: conf.start + conf.values.length,
-            row,
-            values: conf.values,
-          })
-        );
-        let ali = rec.alignments[i];
+        confGroup.add({
+          ...conf,
+          id: `${rowId}-conf-${i}`,
+          end: conf.start + conf.values.length
+        });
 
-        if (ali) {
-          let alignmentAnnotations = soda.Contrib.getAlignmentAnnotations({
+        let ali = rec.alignments[i];
+        if (ali != undefined) {
+          let alignmentAnnotations = soda.getAlignmentAnnotations({
             id: `${rowId}-ali-${i}`,
             start: conf.start + 0.5,
-            row,
             target: ali.target.slice(ali.relativeStart, ali.relativeEnd),
             query: ali.query.slice(ali.relativeStart, ali.relativeEnd),
           });
-          group.add(alignmentAnnotations.all);
+          aliGroup.add([
+            alignmentAnnotations.matches,
+            alignmentAnnotations.substitutions,
+            alignmentAnnotations.gaps,
+            ...alignmentAnnotations.inserts
+          ]);
         }
       }
-      this.confidenceCache.push(group);
+      this.confidenceCache.push(confGroup);
+      this.alignmentCache.push(aliGroup);
     }
   }
 
@@ -244,7 +219,7 @@ export class PolyaContainer {
     if (this.chromosome != undefined && this.semanticBrushRange != undefined) {
       let start = this.semanticBrushRange[0];
       let end = this.semanticBrushRange[1];
-      let url = `https://sodaviz.org/hg38/${this.chromosome}/range?start=${start}&end=${end}`;
+      let url = `https://sodaviz.org/data/hg38/${this.chromosome}/${start}/${end}`;
       fetch(url)
         .then((response) => response.text())
         .then((genomeSeq: string) =>
@@ -252,70 +227,73 @@ export class PolyaContainer {
             start,
             end,
             annotations: [
-              new soda.SequenceAnnotation({
+              {
+                id: "genome",
                 start: start + 0.5,
                 end: end + 1.5,
                 sequence: genomeSeq.toUpperCase(),
-              }),
+              },
             ],
           })
         );
 
-      let confidence: soda.AnnotationGroup<
-        soda.ContinuousAnnotation | soda.SequenceAnnotation
-      >[] = [];
-      let row = 0;
-      for (const group of this.confidenceCache) {
-        let newGroup = new soda.AnnotationGroup<
-          soda.ContinuousAnnotation | soda.SequenceAnnotation
-        >({
-          id: group.id,
-        });
-        for (const ann of group.group) {
-          let slicedAnn:
-            | soda.ContinuousAnnotation
-            | soda.SequenceAnnotation
-            | undefined;
-          if (ann.tag == "confidence") {
-            slicedAnn = soda.Contrib.sliceContinuousAnnotation(
-              <soda.ContinuousAnnotation>ann,
-              start,
-              end
-            );
-          } else {
-            slicedAnn = soda.Contrib.sliceSequenceAnnotation(
-              <soda.SequenceAnnotation>ann,
-              start + 0.5,
-              end + 0.5
-            );
+      let labels: soda.Annotation[] = [];
+      let confidence: soda.PlotAnnotation[] = [];
+      let alignments: soda.SequenceAnnotation[] = [];
+
+      let layoutMap: Map<string, number> = new Map();
+      this.confidenceChart.layout.row = (d) => layoutMap.get(d.a.id) || 0
+
+      let overlappingConfidence = this.confidenceCache.filter((g) => g.start < end && g.end > start)
+      let rowCount = 0;
+      for (const group of overlappingConfidence) {
+        let sliced = soda.slicePlotAnnotations({annotations: group.annotations, start, end});
+        if (sliced != undefined) {
+          for (const ann of sliced.annotations) {
+            confidence.push(ann);
+            layoutMap.set(ann.id, rowCount);
           }
-          if (slicedAnn != undefined) {
-            newGroup.add(slicedAnn);
-          }
-        }
-        if (newGroup.group.length > 0) {
-          newGroup.y = row++;
-          confidence.push(newGroup);
+          labels.push({id: group.id, start: Math.max(start, sliced.start), end});
+          layoutMap.set(group.id, rowCount);
+          rowCount++
         }
       }
 
+      let overlappingAlignments = this.alignmentCache.filter((g) => g.start < end && g.end > start)
+      rowCount = 0;
+      for (const group of overlappingAlignments) {
+        let sliced = soda.sliceSequenceAnnotations({
+          annotations: group.annotations,
+          start: start + 0.5,
+          end: end + 0.5
+        });
+        if (sliced != undefined) {
+          for (const ann of sliced.annotations) {
+            alignments.push(ann);
+            layoutMap.set(ann.id, rowCount + 1);
+          }
+          rowCount++
+        }
+      }
+      
+      rowCount++;
       this.confidenceChart.render({
-        annotations: confidence,
-        start: start,
-        end: end,
-        rowCount: confidence.length,
+        labels,
+        confidence,
+        alignments,
+        start,
+        end,
+        rowCount,
       });
 
       let annotations = this.annotationCache.filter(
         (ann) => ann.start < end && ann.end > start
       );
 
-      let rowCount = Math.max(...annotations.map((a) => a.row)) + 2;
       this.polyaSelectionChart.render({
         annotations,
         start: start,
         end: end,
-        rowCount,
       });
     }
   }
@@ -324,7 +302,7 @@ export class PolyaContainer {
     this.confidenceVisible = !this.confidenceVisible;
     let value = this.confidenceVisible ? "visible" : "hidden";
     this.confidenceChart.viewportSelection
-      .selectAll("g.confidence")
+      .selectAll("g.confidence-group")
       .style("visibility", value);
   }
 
@@ -332,7 +310,7 @@ export class PolyaContainer {
     this.alignmentsVisible = !this.alignmentsVisible;
     let value = this.alignmentsVisible ? "visible" : "hidden";
     this.confidenceChart.viewportSelection
-      .selectAll("g.alignments, g.insertions")
+      .selectAll("g.alignments-group, g.insertions-group")
       .style("visibility", value);
   }
 
@@ -342,7 +320,7 @@ export class PolyaContainer {
         .brushX()
         .extent([
           [0, 0],
-          [this.polyaChart.viewportWidth, this.polyaChart.viewportHeight + 1],
+          [this.polyaChart.viewportWidthPx, this.polyaChart.viewportHeightPx + 1],
         ])
         .on("start", () => this.initializeBrushExtension())
         .on("brush", () => {
@@ -384,10 +362,10 @@ export class PolyaContainer {
         .selectAll("path.brush-extension")
         .attr(
           "d",
-          `M 0 ${this.polyaChart.padHeight}` +
-            `L ${start} ${this.polyaChart.viewportHeight}` +
-            `L ${end} ${this.polyaChart.viewportHeight}` +
-            `L ${this.polyaChart.viewportWidth} ${this.polyaChart.padHeight} Z`
+          `M 0 ${this.polyaChart.calculatePadHeight()}` +
+          `L ${start} ${this.polyaChart.viewportHeight}` +
+          `L ${end} ${this.polyaChart.viewportHeight}` +
+          `L ${this.polyaChart.viewportWidth} ${this.polyaChart.calculatePadHeight()} Z`
         );
     }
   }
